@@ -1,189 +1,140 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CrudTodo</title>
+    <title>CRUD Todo with Custom API</title>
 </head>
 <body>
     <div>
         <form id="form" name="form">
-            <label for="title">title:</label>
-            <input type="text" name="title" id="title" placeholder="write Title">
+            <label for="title">Product Title:</label>
+            <input type="text" name="title" id="title" placeholder="Write Title" required>
             <label for="desc">Description:</label>
-            <input type="text" name="desc" id="desc" placeholder="write Description">
+            <input type="text" name="desc" id="desc" placeholder="Write Description" required>
+            <label for="price">Price:</label>
+            <input type="number" name="price" id="price" placeholder="Enter Price" required>
             <button type="submit" id="btn">Submit</button>
         </form>
     </div>
     <div>
-        <ul id="list">
-
-        </ul>
+        <h1>Products</h1>
+        <ul id="list"></ul>
+    </div>
+    <div>
+        <h4 id="total"></h4>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        const form=document.getElementById('form')
-        const list=document.getElementById('list')
-        form.addEventListener('submit',(event)=>{
-            event.preventDefault()
-            console.log(document.getElementById('title').value)
-            axios.post("https://jsonplaceholder.typicode.com/posts",{
-                title:document.getElementById('title').value,
-                body:document.getElementById('desc').value
 
-            }).then(res=>{
-                console.log(res.data)
-                // display(res.data)
-            }).catch(err=>console.log(err))     
+        const form = document.getElementById("form");
+        const list = document.getElementById("list");
+        const totalDisplay = document.getElementById("total");
+
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const title = document.getElementById("title").value;
+            const desc = document.getElementById("desc").value;
+            const price = document.getElementById("price").value;
+
+            axios.post("https://crudcrud.com/api/3a29b66288634a87a7e2508bafebab1a/todo", { title, description: desc, price })
+                .then((res) => {
+                    console.log("Added:", res.data);
+                    display();
+                    form.reset();
+                })
+                .catch((err) => console.error(err));
+        };
+
+
+        function display() {
+    axios.get('https://crudcrud.com/api/3a29b66288634a87a7e2508bafebab1a/todo')
+        .then((res) => {
+            list.innerHTML = ""; 
+            res.data.forEach((item) => {
+                const listItem = document.createElement("li");
+                
+                const title = document.createElement("h3");
+                title.innerText = item.title;
+                
+                const description = document.createElement("p");
+                description.innerText = `Description: ${item.description}`;
+                
+                const price = document.createElement("p");
+                price.innerText = `Price: $${item.price}`;
+                
+                const deleteButton = document.createElement("button");
+                deleteButton.innerText = "Delete";
+                deleteButton.onclick = () => deleteTask(item._id);
+
+                const editButton = document.createElement("button");
+                editButton.innerText = "Edit";
+                editButton.onclick = () => editTask(item);
+
+                listItem.appendChild(title);
+                listItem.appendChild(description);
+                listItem.appendChild(price);
+                listItem.appendChild(deleteButton);
+                listItem.appendChild(editButton);
+                list.appendChild(listItem);
+            });
+            totalDisplay.innerText = `Total Products: ${res.data.length}`;
         })
-        function display(){
-            // const li=document.createElement('li')
-            // li.textContent=data.title
-            axios.get("https://jsonplaceholder.typicode.com/posts").then(res=>{
-                // const li=document.createElement('li')
-                res.data.forEach(item=>{
+        .catch((err) => console.error(err));
+}
 
-                    const todoList = document.getElementById("list");
-  
-  const listItem = document.createElement("li");
-//   listItem.className = task.completed ? "completed" : "";
-  listItem.innerHTML = `
-    <h3>${item.title}</h3>
-    <p>${item.body}</p>
-    <button onclick="deleteTask(${item.id})">Delete</button>
-  `;
+function deleteTask(id) {
+    axios.delete(`https://crudcrud.com/api/3a29b66288634a87a7e2508bafebab1a/todo/${id}`)
+        .then(() => {
+            console.log(`Deleted Product ID: ${id}`);
+            display(); 
+        })
+        .catch((err) => console.error(err));
+}
+function editTask(item) {
 
-  todoList.appendChild(listItem);
+   
+    document.getElementById("title").value = item.title;
+    document.getElementById("desc").value = item.description;
+    document.getElementById("price").value = item.price;
+
+ 
+    const form = document.getElementById("form");
+    const submitButton = document.getElementById("btn");
+    submitButton.innerText = "Update";
+
+    const originalSubmit = form.onsubmit
+    const itemId = item._id;
+
+    // deleteTask(itemId)
+    form.onsubmit = (event) => {
+        event.preventDefault();
+
+        const updatedTitle = document.getElementById("title").value;
+        const updatedDescription = document.getElementById("desc").value;
+        const updatedPrice = document.getElementById("price").value;
+
+        axios.put(`https://crudcrud.com/api/3a29b66288634a87a7e2508bafebab1a/todo/${itemId}`, {
+            title: updatedTitle,
+            description: updatedDescription,
+            price: updatedPrice
+        })
+            .then(() => {
+                console.log(`Updated Product ID: ${itemId}`);
+                form.reset();
+                submitButton.innerText = "Submit"; 
+                form.onsubmit = originalSubmit;
+                display();
+                 
             })
-        })
+            .catch((err) => console.error(err));
+    
+}
+}
 
-        }
-        function deleteTask(id) {
-            axios.delete(`https://jsonplaceholder.typicode.com/posts/${id}`).then(res=>{
-                console.log(res)
-            }).catch(err=>console.log(err))
-        }
-        display()
+    form.onsubmit=handleFormSubmit;
+        display();
     </script>
-    <div class="task-buttons">
-        <input type="checkbox" ${task.completed ? "checked" : ""} 
-               onchange="updateTask(${task.id}, ${task.completed}, this.parentElement.parentElement)">
-        <button onclick="deleteTask(${task.id}, this.parentElement.parentElement)">Delete</button>
-      </div>
-</body>
-</html> -->
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Todo List with Title & Description</title>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button, textarea { margin: 5px; padding: 5px; width: 300px; }
-    ul { list-style: none; padding: 0; }
-    li { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    .completed { text-decoration: line-through; color: gray; }
-    .task-buttons { margin-top: 10px; }
-  </style>
-</head>
-<body>
-  <h1>Todo List</h1>
-  
-  <input type="text" id="taskTitle" placeholder="Task Title" />
-  <textarea id="taskDescription" placeholder="Task Description"></textarea>
-  <button onclick="addTask()">Add Task</button>
-  
-  <ul id="todoList"></ul>
-
-  <script >
-    let todoList = document.getElementById('todoList');
-    console.log(todoList.parentElement)
-    const API_URL = "https://jsonplaceholder.typicode.com/posts"; // Replace with your API URL
-
-// Fetch and render tasks
-const fetchTasks = async () => {
-  try {
-    const response = await axios.get(API_URL);
-    const todos = response.data.slice(0, 10); // Limit to 10 tasks for demo
-    renderTasks(todos);
-  } catch (error) {
-    console.error("Error fetching tasks:", error);
-  }
-};
-
-// Add a task
-const addTask = async () => {
-  const titleInput = document.getElementById("taskTitle");
-  const descriptionInput = document.getElementById("taskDescription");
-  const taskTitle = titleInput.value.trim();
-  const taskDescription = descriptionInput.value.trim();
-
-  if (!taskTitle || !taskDescription) return alert("Title and Description cannot be empty!");
-
-  try {
-    const response = await axios.post(API_URL, { title: taskTitle, body: taskDescription, completed: false });
-    const newTask = response.data;
-    appendTask(newTask);
-    titleInput.value = "";
-    descriptionInput.value = "";
-  } catch (error) {
-    console.error("Error adding task:", error);
-  }
-};
-
-// Update a task
-const updateTask = async (id, currentStatus, taskElement) => {
-  try {
-    await axios.put(`${API_URL}/${id}`, { completed: !currentStatus });
-    taskElement.classList.toggle("completed");
-  } catch (error) {
-    console.error("Error updating task:", error);
-  }
-};
-
-// Delete a task
-const deleteTask = async (id, taskElement) => {
-    console.log(taskElement)
-  try {
-    await axios.delete(`${API_URL}/${id}`);
-    taskElement.remove();
-  } catch (error) {
-    console.error("Error deleting task:", error);
-  }
-};
-
-// Render the tasks
-const renderTasks = (tasks) => {
-  const todoList = document.getElementById("todoList");
-  todoList.innerHTML = "";
-  tasks.forEach((task) => appendTask(task));
-};
-
-// Append a single task to the list
-const appendTask = (task) => {
-  const todoList = document.getElementById("todoList");
-  
-  const listItem = document.createElement("li");
-  listItem.className = task.completed ? "completed" : "";
-  listItem.innerHTML = `
-    <h3>${task.title}</h3>
-    <p>${task.body}</p>
-    <div class="task-buttons">
-      <input type="checkbox" ${task.completed ? "checked" : ""} 
-             onchange="updateTask(${task.id}, ${task.completed}, this.parentElement.parentElement)">
-      <button onclick="deleteTask(${task.id}, this.parentElement.parentElement)">Delete</button>
-    </div>
-  `;
-
-  todoList.appendChild(listItem);
-};
-
-// Initial fetch
-fetchTasks();
-
-  </script>
 </body>
 </html>
